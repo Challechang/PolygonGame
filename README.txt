@@ -1,0 +1,1 @@
+Run "python MakeExe.py py2exe" in Terminal to build .exe which can run on Windows.
