@@ -3,6 +3,7 @@ from Tkinter import *
 from FunctionCallback import *
 from tkMessageBox import showerror
 from tkMessageBox import  askyesno
+from ImageTk import *
 import copy
 import polygon_game as plg
 import tkFont
@@ -25,7 +26,7 @@ class MainFrame(Frame):
     firstEdge       = True
     ERROR           = -1
     test            = 0
-    intervalTime    = 2
+    intervalTime    = 1000
 
     def __init__(self,parent=None):
         Frame.__init__(self, parent)
@@ -122,12 +123,10 @@ class MainFrame(Frame):
         self.drawOprNextOrBack()
         for i in range(len(self.lines)):
             line = self.lines[i]
-            (startX,startY,endX,endY) = (line.getStartX(),line.getStartY(),
-                                         line.getEndX(),line.getEndY())
-            idInCanvas = self.canvas.create_line((startX,startY,endX,endY), arrow=tk.BOTH,
-                                                                            width=3,
-                                                                            smooth=True,
-                                                                            activefill="white")
+            (startX,startY,endX,endY) = (line.getStartX(), line.getStartY(),
+                                         line.getEndX(), line.getEndY())
+            idInCanvas = self.canvas.create_line((startX, startY, endX, endY), arrow=tk.BOTH,
+                                                 width=3, smooth=True, activefill="white")
             line.setIdInCanvas(idInCanvas)
             x1,x2,y1,y2 = calXY(startX, startY, endX, endY)
             oprId = self.canvas.create_text(x1, y1,
@@ -135,13 +134,13 @@ class MainFrame(Frame):
                                             fill="blue",
                                             activefill="yellow")
             line.setIdOprInCanvas(oprId)
-            idId = self.canvas.create_text( x2, y2,
-                                            text=line.getId(),
-                                            fill="blue",
-                                            activefill="yellow")
+            idId = self.canvas.create_text(x2, y2,
+                                           text=line.getId(),
+                                           fill="blue",
+                                           activefill="yellow")
             line.setIdIdInCanvas(idId)
-            ovalId = self.canvas.create_oval(startX-self.ovalRadius,startY-self.ovalRadius,
-                                             startX+self.ovalRadius,startY+self.ovalRadius,
+            ovalId = self.canvas.create_oval(startX-self.ovalRadius, startY-self.ovalRadius,
+                                             startX+self.ovalRadius, startY+self.ovalRadius,
                                              fill="black")
             numId = self.canvas.create_text(startX, startY,
                                             text=line.getNode1().getNum(),
@@ -155,7 +154,7 @@ class MainFrame(Frame):
                                                 text=line.getNode2().getNum(),
                                                 fill="yellow")
                 line.getNode2().setIdInCanvas([ovalId,numId])
-            def handler(event,i=line.getId()):
+            def handler(event,i = line.getId()):
                 return self.lineClick(event,i)
             self.canvas.tag_bind(idInCanvas,sequence="<Button-1>",func=handler)
 
@@ -246,7 +245,12 @@ class MainFrame(Frame):
         showBestResult = Button(resultbarWindow,width=self.widgetWidth,
                                                 text="Best Result",
                                                 command=self.showBestResultClick)
+        filename = 'D:\Python27\workspace\PolygonGame\src\images\pic.JPG'
+        img = PhotoImage(file=filename)
+        label = Label(resultbarWindow, image=img)
+
         resultbarWindow.add(showBestResult, sticky=N, pady=10)
+        # resultbarWindow.add(label)
 
     def showBestResultClick(self):
         if (isNum(self.n) == -1):
@@ -354,6 +358,4 @@ class MainFrame(Frame):
         drawbarWindow.add(self.canvas)
 
 if __name__=='__main__':
-    root = Tk()
-    framework = MainFrame(root)
-    root.mainloop()
+    MainFrame().mainloop()
