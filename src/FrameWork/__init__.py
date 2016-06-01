@@ -11,13 +11,13 @@ import tkFont
 class MainFrame(Frame):
 
     initbarHeight   = 100
-    initbarWidth    = 100
-    resultbarHeight = 400
-    resultbarWidth  = 200
+    initbarWidth    = 200
+    resultbarHeight = 370
+    resultbarWidth  = 197
     drawbarHeight   = 500
     drawbarWidth    = 500
     ovalRadius      = 25
-    widgetWidth     = 10
+    widgetWidth     = 20
     n               = -1
     lines           = []
     originLines     = []
@@ -31,6 +31,9 @@ class MainFrame(Frame):
     initLine        = False
     background      = "white"
     widgetColor     = "white"
+    playX           = 100
+    playY           = 210
+    playRadius      = 60
     def __init__(self,parent=None):
         Frame.__init__(self, parent)
 #         self.pack(expand=YES,fill=BOTH)
@@ -76,19 +79,20 @@ class MainFrame(Frame):
     #接收用户输入的数据n
     def createInitbar(self):
         initbarWindow = PanedWindow(self.master, relief=RIDGE,
-                                    orient=VERTICAL, width=self.resultbarWidth,
+                                    orient=VERTICAL, width=self.initbarWidth,
                                     height=self.initbarHeight, bg=self.background)
-        initbarWindow.grid(row=0,column=0)
+        initbarWindow.grid(row=0, column=0)
 
-        Label(initbarWindow, text="Input N", anchor=CENTER, bg=self.widgetColor).grid(row=0, column=0, columnspan=2)
-        getNEntry = Entry(initbarWindow, bd="5")
+        Label(initbarWindow, text="Input N", anchor=CENTER,
+              bg=self.widgetColor).grid(row=0, column=0, columnspan=2)
+        getNEntry = Entry(initbarWindow, bd="5", width=26)
         getNEntry.grid(row=1, column=0, columnspan=2)
         confirm = Button(initbarWindow, command=lambda: self.confirmGetN(getNEntry),
                          text="Confirm", width=self.widgetWidth, bg=self.widgetColor)
-        confirm.grid(row=2, column=0, padx=10)
+        confirm.grid(row=2, column=0, pady=10)
         inputData = Button(initbarWindow, text="Input Data", command=self.getData,
                            width=self.widgetWidth, bg=self.widgetColor)
-        inputData.grid(row=2, column=1, pady=10, padx=10)
+        inputData.grid(row=3, column=0, padx=10)
     
     def confirmGetN(self,getNEntry):
         self.n = getNEntry.get()
@@ -192,7 +196,7 @@ class MainFrame(Frame):
                                                 fill="yellow",
                                                 font=self.myFont)
                 line.getNode2().setIdInCanvas([ovalId, numId])
-            def handler(event,i = line.getId()):
+            def handler(event, i = line.getId()):
                 return self.lineClick(event, i)
             self.canvas.tag_bind(idInCanvas, sequence="<Button-1>", func=handler)
 
@@ -282,7 +286,7 @@ class MainFrame(Frame):
         resultbarWindow = PanedWindow(self.master, relief=RIDGE,
                                       width=self.resultbarWidth, height=self.resultbarHeight,
                                       bg=self.background, orient=VERTICAL)
-        resultbarWindow.grid(row=1,column=0)
+        resultbarWindow.grid(row=1, column=0)
         # showBestResult = Button(resultbarWindow, width=self.widgetWidth,
         #                         text="Best Result", command=self.showBestResultClick,
         #                         bg=self.widgetColor)
@@ -290,13 +294,42 @@ class MainFrame(Frame):
         myFont = tkFont.Font(size=11)
         self.resultCanvas.create_text(self.resultbarWidth / 2, 25, text="Your result", font=myFont)
         self.resultCanvas.create_text(self.resultbarWidth / 2, 55, text="will be show in here!!!", font=myFont)
-        # filename = 'D:\Python27\workspace\PolygonGame\src\images\pic.JPG'
-        # img = PhotoImage(file=filename)
-        # label = Label(resultbarWindow, image=img)
-
-        # resultbarWindow.add(showBestResult, sticky=N, pady=10)
+        self.playX = self.resultbarWidth / 2
+        self.playY = 210
+        self.resultCanvas.create_oval(self.playX - self.playRadius, self.playY - self.playRadius,
+                                      self.playX + self.playRadius, self.playY + self.playRadius,
+                                      fill="black")
+        self.resultCanvas.create_oval(self.playX - self.playRadius + 5, self.playY - self.playRadius + 5,
+                                      self.playX + self.playRadius - 5, self.playY + self.playRadius - 5,
+                                      fill=self.widgetColor)
+        self.playId = self.resultCanvas.create_polygon(self.playX - self.playRadius / 2.0 + 8, self.playY - self.playRadius / 2.0,
+                                                       self.playX - self.playRadius / 2.0 + 8, self.playY + self.playRadius / 2.0,
+                                                       self.playX + self.playRadius / 2.0 + 2, self.playY,
+                                                       fill="black", activefill="blue")
+        self.resultCanvas.tag_bind(self.playId, sequence="<Button-1>", func=self.play)
         resultbarWindow.add(self.resultCanvas)
-        # resultbarWindow.add(label)
+
+    def play(self, event):
+        self.resultCanvas.delete(self.playId)
+        self.pauseId = self.resultCanvas.create_rectangle(self.playX - self.playRadius / 2.0 + 8, self.playY - self.playRadius / 2.0,
+                                                          self.playX + self.playRadius / 2.0 - 8, self.playY + self.playRadius / 2.0,
+                                                          fill="black", activefill="blue")
+        self.resultCanvas.create_rectangle(self.playX - self.playRadius / 2.0 + 22, self.playY - self.playRadius / 2.0,
+                                           self.playX + self.playRadius / 2.0 - 22, self.playY + self.playRadius / 2.0,
+                                           fill="white", outline="white")
+        self.resultCanvas.tag_bind(self.pauseId, sequence="<Button-1>", func=self.pause)
+        self.showBestResultClick()
+
+    def pause(self, event):
+        self.resultCanvas.delete(self.pauseId)
+        self.playId = self.resultCanvas.create_polygon(self.playX - self.playRadius / 2.0 + 8,
+                                                       self.playY - self.playRadius / 2.0,
+                                                       self.playX - self.playRadius / 2.0 + 8,
+                                                       self.playY + self.playRadius / 2.0,
+                                                       self.playX + self.playRadius / 2.0 + 2, self.playY,
+                                                       fill="black", activefill="blue")
+        self.resultCanvas.tag_bind(self.playId, sequence="<Button-1>", func=self.play)
+
 
     def showBestResultClick(self):
         if (isNum(self.n) == -1):
