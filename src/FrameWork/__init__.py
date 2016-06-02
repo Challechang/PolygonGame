@@ -3,10 +3,11 @@ from Tkinter import *
 from FunctionCallback import *
 from tkMessageBox import showerror
 from tkMessageBox import  askyesno
-from ImageTk import *
 import copy
 import polygon_game as plg
 import tkFont
+import random
+
 
 class MainFrame(Frame):
 
@@ -16,7 +17,7 @@ class MainFrame(Frame):
     resultbarWidth  = 197
     drawbarHeight   = 500
     drawbarWidth    = 500
-    ovalRadius      = 25
+    ovalRadius      = 27
     widgetWidth     = 20
     n               = -1
     lines           = []
@@ -29,11 +30,13 @@ class MainFrame(Frame):
     isPlaying       = False
     firstEdge       = True
     initLine        = False
+    isPauseClick    = False
     background      = "white"
     widgetColor     = "white"
     playX           = 100
     playY           = 210
     playRadius      = 60
+
     def __init__(self,parent=None):
         Frame.__init__(self, parent)
 #         self.pack(expand=YES,fill=BOTH)
@@ -55,8 +58,8 @@ class MainFrame(Frame):
 
     def fileMenu(self):
         file = Menu(self.menubar, bg=self.widgetColor)
-        file.add_command(label='New...', command=self.notdone, underline=0)
-        file.add_command(label='Open...', command=self.openFile, underline=0)
+        file.add_command(label='Home', command=self.returnHome, underline=0)
+        file.add_command(label='Open...', command=self.notdone, underline=0)
         file.add_command(label='Quit', command=self.master.destroy, underline=0)
         self.menubar.add_cascade(label='File', menu=file, underline=0)
 
@@ -67,8 +70,8 @@ class MainFrame(Frame):
         self.menubar.add_cascade(label='Edit', menu=edit, underline=0)
 
     #     打开文件菜单回调函数
-    def openFile(self):
-        showerror('error', "not done yet!!!")
+    def returnHome(self):
+        self.createWidgets()
 
     def capVideo(self):
         showerror('error', "not done yet!!!")
@@ -89,10 +92,10 @@ class MainFrame(Frame):
         getNEntry.grid(row=1, column=0, columnspan=2)
         confirm = Button(initbarWindow, command=lambda: self.confirmGetN(getNEntry),
                          text="Confirm", width=self.widgetWidth, bg=self.widgetColor)
-        confirm.grid(row=2, column=0, pady=10)
+        confirm.grid(row=2, column=0, pady=5)
         inputData = Button(initbarWindow, text="Input Data", command=self.getData,
                            width=self.widgetWidth, bg=self.widgetColor)
-        inputData.grid(row=3, column=0, padx=10)
+        inputData.grid(row=3, column=0, padx=10, pady=3)
     
     def confirmGetN(self,getNEntry):
         self.n = getNEntry.get()
@@ -120,7 +123,7 @@ class MainFrame(Frame):
         preId = self.canvas.create_text(self.drawbarWidth * 1.0 / 3 + 30, self.drawbarHeight * 7.0 / 8 + 15,
                                         text="Previous",
                                         fill="yellow",
-                                        activefill="white")
+                                        activefill="blue")
 
         self.canvas.create_rectangle(self.drawbarWidth * 2.0 / 3, self.drawbarHeight * 7.0 / 8,
                                      self.drawbarWidth * 2.0 / 3 + 60, self.drawbarHeight * 7.0 / 8 + 30,
@@ -128,7 +131,7 @@ class MainFrame(Frame):
         nextId = self.canvas.create_text(self.drawbarWidth * 2.0 / 3 + 30, self.drawbarHeight * 7.0 / 8 + 15,
                                          text="Next",
                                          fill="yellow",
-                                         activefill="white")
+                                         activefill="blue")
 
         self.canvas.tag_bind(preId, sequence="<Button-1>", func=self.preOprClick)
         self.canvas.tag_bind(nextId, sequence="<Button-1>", func=self.nextOprClick)
@@ -164,7 +167,7 @@ class MainFrame(Frame):
             (startX, startY, endX, endY) = (line.getStartX(), line.getStartY(),
                                             line.getEndX(), line.getEndY())
             idInCanvas = self.canvas.create_line((startX, startY, endX, endY), arrow=tk.BOTH,
-                                                 width=5, smooth=True, activefill="white")
+                                                 width=5, smooth=True, activefill="blue")
             line.setIdInCanvas(idInCanvas)
             x1,x2,y1,y2 = calXY(startX, startY, endX, endY)
             oprId = self.canvas.create_text(x1, y1,
@@ -292,8 +295,12 @@ class MainFrame(Frame):
         #                         bg=self.widgetColor)
         self.resultCanvas = Canvas(resultbarWindow, bg=self.widgetColor)
         myFont = tkFont.Font(size=11)
-        self.resultCanvas.create_text(self.resultbarWidth / 2, 25, text="Your result", font=myFont)
-        self.resultCanvas.create_text(self.resultbarWidth / 2, 55, text="will be show in here!!!", font=myFont)
+        self.resultCanvas.create_text(self.resultbarWidth / 2, 25,
+                                      text="\n\n\n\n\n\n  Click the play button\n"
+                                           " to show the best result \n"
+                                           "   of Polygon Game \n"
+                                           "  when the edge is N!!!",
+                                      font=myFont)
         self.playX = self.resultbarWidth / 2
         self.playY = 210
         self.resultCanvas.create_oval(self.playX - self.playRadius, self.playY - self.playRadius,
@@ -310,6 +317,11 @@ class MainFrame(Frame):
         resultbarWindow.add(self.resultCanvas)
 
     def play(self, event):
+        if self.isPauseClick:
+            self.canvas.after(0, func=self.showBestResultAnimation)
+        else:
+            if self.showBestResultClick() == self.ERROR:
+                return
         self.resultCanvas.delete(self.playId)
         self.pauseId = self.resultCanvas.create_rectangle(self.playX - self.playRadius / 2.0 + 8, self.playY - self.playRadius / 2.0,
                                                           self.playX + self.playRadius / 2.0 - 8, self.playY + self.playRadius / 2.0,
@@ -318,7 +330,8 @@ class MainFrame(Frame):
                                            self.playX + self.playRadius / 2.0 - 22, self.playY + self.playRadius / 2.0,
                                            fill="white", outline="white")
         self.resultCanvas.tag_bind(self.pauseId, sequence="<Button-1>", func=self.pause)
-        self.showBestResultClick()
+        self.isPauseClick = False
+        self.isPlaying = True
 
     def pause(self, event):
         self.resultCanvas.delete(self.pauseId)
@@ -328,6 +341,9 @@ class MainFrame(Frame):
                                                        self.playY + self.playRadius / 2.0,
                                                        self.playX + self.playRadius / 2.0 + 2, self.playY,
                                                        fill="black", activefill="blue")
+        self.isPlaying = False
+        self.isPauseClick = True
+        self.canvas.after_cancel(self.curAnimationRunId)
         self.resultCanvas.tag_bind(self.playId, sequence="<Button-1>", func=self.play)
 
 
@@ -335,23 +351,29 @@ class MainFrame(Frame):
         if (isNum(self.n) == -1):
             self.n = -1
             showerror("error", "Data is not a Number!!!")
-            return
+            return self.ERROR
         if (isNum(self.n) < 1):
             self.n = -1
             showerror("error", "Number less than 1!!!")
-            return
-        for line in self.originLines:
-            print line.getId()
-        bestRemoveLineOrder = plg.dealBestPath(self.originLines)
+            return self.ERROR
+        self.bestRemoveLineOrder = plg.dealBestPath(self.originLines)
         self.lines = copy.deepcopy(self.originLines)
         self.isPlaying = True
         self.initLine = True
         self.drawLines()
         self.firstEdge = True
-        self.canvas.after(self.intervalTime, func=lambda: self.showBestResultAnimation(bestRemoveLineOrder))
+        self.canvas.after(self.intervalTime, func=lambda: self.showBestResultAnimation())
 
-    def showBestResultAnimation(self, bestRemoveLineOrder):
-        if len(bestRemoveLineOrder) == 0:
+    def showBestResultAnimation(self):
+        if len(self.bestRemoveLineOrder) == 0:
+            self.playId = self.resultCanvas.create_polygon(self.playX - self.playRadius / 2.0 + 8,
+                                                           self.playY - self.playRadius / 2.0,
+                                                           self.playX - self.playRadius / 2.0 + 8,
+                                                           self.playY + self.playRadius / 2.0,
+                                                           self.playX + self.playRadius / 2.0 + 2, self.playY,
+                                                           fill="black", activefill="blue")
+            self.resultCanvas.delete(self.pauseId)
+            self.resultCanvas.tag_bind(self.playId, sequence="<Button-1>", func=self.play)
             again = askyesno("Animation", "Animation finish,show again?")
             if again:
                 self.showBestResultClick()
@@ -360,9 +382,9 @@ class MainFrame(Frame):
                 return
         else:
             self.isPlaying = True
-            i = bestRemoveLineOrder.pop(0)
+            i = self.bestRemoveLineOrder.pop(0)
             self.removeLineIFromCanvas(i)
-            self.canvas.after(self.intervalTime, func=lambda: self.showBestResultAnimation(bestRemoveLineOrder))
+            self.curAnimationRunId = self.canvas.after(self.intervalTime, func=lambda: self.showBestResultAnimation())
 
     def getData(self):
         linesLen = len(self.lines)
@@ -394,12 +416,28 @@ class MainFrame(Frame):
                         activeforeground="gray").grid(row=i+1,column=3)
             numsEntry.append(num)
         confirm = Button(getDataFrame, text="confirm",
-                         command=lambda:self.inputDataConfirm(getDataFrame))
-        confirm.grid(row=linesLen+1, column=1, columnspan=2)
+                         command=lambda: self.inputDataConfirm(getDataFrame))
+        random = Button(getDataFrame, text="random",
+                         command=lambda: self.generateRandomData(getDataFrame))
+        confirm.grid(row=linesLen+1, column=1, padx=5)
+        random.grid(row=linesLen+1, column=2)
         getDataFrame.focus_set()
         getDataFrame.grab_set()
         getDataFrame.wait_window()
-    def inputDataConfirm(self,getDataFrame):
+
+    def generateRandomData(self, getDataFrame):
+        for i in range(len(self.lines)):
+            self.lines[i].getNode1().setNum(random.randint(0, 100))
+            if random.randint(0, 1) == 0:
+                self.lines[i].setOpr("+")
+            else:
+                self.lines[i].setOpr("*")
+        # 更新原始输入数据
+        self.originLines = copy.deepcopy(self.lines)
+        self.drawLines()
+        getDataFrame.destroy()
+
+    def inputDataConfirm(self, getDataFrame):
         global numsEntry,v
         nums = []
         error = False

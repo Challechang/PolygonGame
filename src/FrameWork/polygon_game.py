@@ -77,7 +77,7 @@ def dealBestPath(lines):
     result=[]
     for j in range(sum):
         result.append((int)(dp[j][sum][1]))
-    print '最优值为->',max(result)
+    # print '最优值为->',max(result)
     _index=result.index(max(result))
     ###print _index
     ans=[]
@@ -90,10 +90,3 @@ def dealBestPath(lines):
         #print '删除第',(_index-1),'条边'
         ans.insert(0,_index-1)
     return ans
-
-
-
-
-
-
-
