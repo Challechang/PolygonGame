@@ -296,11 +296,10 @@ class MainFrame(Frame):
         self.resultCanvas = Canvas(resultbarWindow, bg=self.widgetColor)
         myFont = tkFont.Font(size=11)
         self.resultCanvas.create_text(self.resultbarWidth / 2, 25,
-                                      text="\n\n\n\n\n\n  Click the play button\n"
-                                           " to show the best result \n"
-                                           "   of Polygon Game \n"
-                                           "  when the edge is N!!!",
-                                      font=myFont)
+                                      text="\n\n\n\n\n\n How to play:\n"
+                                           " 1. Input N\n"
+                                           " 2. Do whatever you want\n"
+                                           " 3. Exit")
         self.playX = self.resultbarWidth / 2
         self.playY = 210
         self.resultCanvas.create_oval(self.playX - self.playRadius, self.playY - self.playRadius,
